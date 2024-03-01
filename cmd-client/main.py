@@ -27,6 +27,7 @@ try:
     mycursor.execute("CREATE TABLE IF NOT EXISTS orgs (orgID int primary key, orgName varchar(30), orgAddress varchar(500), orgEmail varchar(100), orgPassword varchar(500))")
     mycursor.execute("CREATE TABLE IF NOT EXISTS coa (orgID int, account_name varchar(50) NOT NULL, category char(1) NOT NULL, PRIMARY KEY (orgID,account_name))")
     mycursor.execute("CREATE TABLE IF NOT EXISTS journal (orgID int, trx_date date, debit_account varchar(50), credit_account varchar(50), narration varchar(5000), amount float, trx_id int)")
+    mycursor.execute("CREATE TABLE IF NOT EXISTS fixed_assets (orgID int, account_name varchar(50), ls int, method char(3), pp float, dep float, dp date)")
 except:
     print("There was a problem with the MySQL server")
     exit()
@@ -87,7 +88,7 @@ cls()
 print()
 while True:
     print(f"Welcome back, {orgData[0][1]}")
-    options = ["Journal", "Ledger & Accounts", "Financial Reports", "Asset Management", "Settings", "Exit"]
+    options = ["Journal", "Ledger & Accounts", "Financial Reports", "Fixed Assets Management", "Settings", "Exit"]
     option = options[cutie.select(options)]
     if option=="Ledger & Accounts":
         cls()
@@ -97,7 +98,12 @@ while True:
             print("You have not created any accounts. Create an account to access Journal and Ledger")
             try:
                 account_name = input("Enter the name of the account. Press CTRL+C to quit")
-            except KeyboardInterrupt:
+                list_of_assets = ["Machinery", "Land", "Building", "Land & Building", "Plant", "Plant & Machinery", "Furniture", "Vehicles"]
+                if account_name in list_of_assets:
+                    print("You are trying to add a Fixed Asset. We recommend that you add it through the Fixed Assets Management, so that your asset can automatically be depreciated at the year-end. You can also easily have features for disposal of the asset")
+                    ch = cutie.prompt_yes_or_no("Are you sure you wish to continue? ")
+                    print(ch)
+            except:
                 continue
             options = ["Asset", "Liability", "Income", "Capital", "Expense"]
             classification = options[cutie.select(options)]
@@ -126,6 +132,16 @@ while True:
                 cls()
                 try:
                     account_name = input("Enter the name of the account. Press CTRL+C to quit")
+                    list_of_assets = ["Machinery", "Land", "Building", "Land & Building", "Plant", "Plant & Machinery", "Furniture", "Vehicles"]
+                    if account_name in list_of_assets:
+                        print("You are trying to add a Fixed Asset. We recommend that you add it through the Fixed Assets Management, so that your asset can automatically be depreciated at the year-end. You can also easily have features for disposal of the asset")
+                        ch = cutie.prompt_yes_or_no("Are you sure you wish to continue? ")
+                        if ch==True:
+                            print("Ok")
+                            
+                        else:
+                            pass
+
                 except KeyboardInterrupt:
                     exit()
                 options = ["Asset", "Liability", "Income", "Capital", "Expense"]
@@ -169,10 +185,10 @@ while True:
                     myresult = mycursor.fetchall()
                     if myresult!=[]:
                         sum_debit, sum_credit = 0, 0
-                        if ori_sum_debit>ori_sum_credit:
+                        if ori_sum_debit>ori_sum_credit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
                             sum_debit+=ori_sum_debit-ori_sum_credit
-                        else:
+                        elif ori_sum_credit>ori_sum_debit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
                             sum_credit+=ori_sum_credit-ori_sum_debit
                         for trx in myresult:
@@ -197,9 +213,9 @@ while True:
                             t.add_row(["", "", format_string(sum_debit), format_string(sum_credit)])
                     else:
                         if ori_sum_debit>ori_sum_credit:
-                            t.add_row(["", "Balance c/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
+                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_debit-ori_sum_credit)], divider=True)
                         else:
-                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
+                            t.add_row(["", "Balance c/d", format_string(ori_sum_credit-ori_sum_debit), ""], divider=True)
                     cls()
                     print(t)
                 elif options=="Yesterday":
@@ -219,10 +235,10 @@ while True:
                     myresult = mycursor.fetchall()
                     if myresult!=[]:
                         sum_debit, sum_credit = 0, 0
-                        if ori_sum_debit>ori_sum_credit:
+                        if ori_sum_debit>ori_sum_credit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
                             sum_debit+=ori_sum_debit-ori_sum_credit
-                        else:
+                        elif ori_sum_credit>ori_sum_debit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
                             sum_credit+=ori_sum_credit-ori_sum_debit
                         for trx in myresult:
@@ -247,9 +263,9 @@ while True:
                             t.add_row(["", "", format_string(sum_debit), format_string(sum_credit)])
                     else:
                         if ori_sum_debit>ori_sum_credit:
-                            t.add_row(["", "Balance c/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
+                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_debit-ori_sum_credit)], divider=True)
                         else:
-                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
+                            t.add_row(["", "Balance c/d", format_string(ori_sum_credit-ori_sum_debit), ""], divider=True)
                     cls()
                     print(t)
                 elif options=="This Week":
@@ -270,10 +286,10 @@ while True:
                     myresult = mycursor.fetchall()
                     if myresult!=[]:
                         sum_debit, sum_credit = 0, 0
-                        if ori_sum_debit>ori_sum_credit:
+                        if ori_sum_debit>ori_sum_credit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
                             sum_debit+=ori_sum_debit-ori_sum_credit
-                        else:
+                        elif ori_sum_credit>ori_sum_debit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
                             sum_credit+=ori_sum_credit-ori_sum_debit
                         for trx in myresult:
@@ -298,9 +314,9 @@ while True:
                             t.add_row(["", "", format_string(sum_debit), format_string(sum_credit)])
                     else:
                         if ori_sum_debit>ori_sum_credit:
-                            t.add_row(["", "Balance c/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
+                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_debit-ori_sum_credit)], divider=True)
                         else:
-                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
+                            t.add_row(["", "Balance c/d", format_string(ori_sum_credit-ori_sum_debit), ""], divider=True)
                     cls()
                     print(t)
                 elif options=="This Month":
@@ -321,10 +337,10 @@ while True:
                     myresult = mycursor.fetchall()
                     if myresult!=[]:
                         sum_debit, sum_credit = 0, 0
-                        if ori_sum_debit>ori_sum_credit:
+                        if ori_sum_debit>ori_sum_credit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
                             sum_debit+=ori_sum_debit-ori_sum_credit
-                        else:
+                        elif ori_sum_credit>ori_sum_debit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
                             sum_credit+=ori_sum_credit-ori_sum_debit
                         for trx in myresult:
@@ -349,9 +365,9 @@ while True:
                             t.add_row(["", "", format_string(sum_debit), format_string(sum_credit)])
                     else:
                         if ori_sum_debit>ori_sum_credit:
-                            t.add_row(["", "Balance c/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
+                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_debit-ori_sum_credit)], divider=True)
                         else:
-                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
+                            t.add_row(["", "Balance c/d", format_string(ori_sum_credit-ori_sum_debit), ""], divider=True)
                     cls()
                     print(t)
                 elif options=="Last Month":
@@ -372,10 +388,10 @@ while True:
                     myresult = mycursor.fetchall()
                     if myresult!=[]:
                         sum_debit, sum_credit = 0, 0
-                        if ori_sum_debit>ori_sum_credit:
+                        if ori_sum_debit>ori_sum_credit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
                             sum_debit+=ori_sum_debit-ori_sum_credit
-                        else:
+                        elif ori_sum_credit>ori_sum_debit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
                             sum_credit+=ori_sum_credit-ori_sum_debit
                         for trx in myresult:
@@ -400,16 +416,16 @@ while True:
                             t.add_row(["", "", format_string(sum_debit), format_string(sum_credit)])
                     else:
                         if ori_sum_debit>ori_sum_credit:
-                            t.add_row(["", "Balance c/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
+                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_debit-ori_sum_credit)], divider=True)
                         else:
-                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
+                            t.add_row(["", "Balance c/d", format_string(ori_sum_credit-ori_sum_debit), ""], divider=True)
                     cls()
                     print(t)
                 elif options=="Calender Year till date":
                     ori_sum_debit=ori_sum_credit=0
                     start_of_month = datetime.now().replace(month=1, day=1)
                     end_of_month = datetime.now()
-                    t.title = f"{accounts} Account for the Calender Year {start_of_month.year}"
+                    t.title = f"{accounts} Account from {start_of_month.date()} to {end_of_month.date()}"
                     mycursor.execute(f"SELECT trx_date, debit_account, credit_account, narration, amount, trx_id from journal where orgID={orgData[0][0]} and (debit_account='{accounts}' or credit_account='{accounts}') and (trx_date<'{start_of_month}') order by trx_date")
                     myresult = mycursor.fetchall()
                     if myresult!=[]:
@@ -422,10 +438,10 @@ while True:
                     myresult = mycursor.fetchall()
                     if myresult!=[]:
                         sum_debit, sum_credit = 0, 0
-                        if ori_sum_debit>ori_sum_credit:
+                        if ori_sum_debit>ori_sum_credit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
                             sum_debit+=ori_sum_debit-ori_sum_credit
-                        else:
+                        elif ori_sum_credit>ori_sum_debit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
                             sum_credit+=ori_sum_credit-ori_sum_debit
                         for trx in myresult:
@@ -450,16 +466,16 @@ while True:
                             t.add_row(["", "", format_string(sum_debit), format_string(sum_credit)])
                     else:
                         if ori_sum_debit>ori_sum_credit:
-                            t.add_row(["", "Balance c/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
+                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_debit-ori_sum_credit)], divider=True)
                         else:
-                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
+                            t.add_row(["", "Balance c/d", format_string(ori_sum_credit-ori_sum_debit), ""], divider=True)
                     cls()
                     print(t)
                 elif options=="Accounting Year till date":
                     ori_sum_debit=ori_sum_credit=0
                     start_of_month = datetime.now().replace(year=datetime.now().year - 1, month=4, day=1)
                     end_of_month = datetime.now()
-                    t.title = f"{accounts} Account for the Accounting Year {start_of_month.year}-{end_of_month.year}"
+                    t.title = f"{accounts} Account from {start_of_month.date()} to {end_of_month.date()}"
                     mycursor.execute(f"SELECT trx_date, debit_account, credit_account, narration, amount, trx_id from journal where orgID={orgData[0][0]} and (debit_account='{accounts}' or credit_account='{accounts}') and (trx_date<'{start_of_month}') order by trx_date")
                     myresult = mycursor.fetchall()
                     if myresult!=[]:
@@ -472,10 +488,10 @@ while True:
                     myresult = mycursor.fetchall()
                     if myresult!=[]:
                         sum_debit, sum_credit = 0, 0
-                        if ori_sum_debit>ori_sum_credit:
+                        if ori_sum_debit>ori_sum_credit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
                             sum_debit+=ori_sum_debit-ori_sum_credit
-                        else:
+                        elif ori_sum_credit>ori_sum_debit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
                             sum_credit+=ori_sum_credit-ori_sum_debit
                         for trx in myresult:
@@ -500,9 +516,9 @@ while True:
                             t.add_row(["", "", format_string(sum_debit), format_string(sum_credit)])
                     else:
                         if ori_sum_debit>ori_sum_credit:
-                            t.add_row(["", "Balance c/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
+                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_debit-ori_sum_credit)], divider=True)
                         else:
-                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
+                            t.add_row(["", "Balance c/d", format_string(ori_sum_credit-ori_sum_debit), ""], divider=True)
                     cls()
                     print(t)
                 elif options=="This Quarter":
@@ -527,10 +543,10 @@ while True:
                     myresult = mycursor.fetchall()
                     if myresult!=[]:
                         sum_debit, sum_credit = 0, 0
-                        if ori_sum_debit>ori_sum_credit:
+                        if ori_sum_debit>ori_sum_credit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
                             sum_debit+=ori_sum_debit-ori_sum_credit
-                        else:
+                        elif ori_sum_credit>ori_sum_debit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
                             sum_credit+=ori_sum_credit-ori_sum_debit
                         for trx in myresult:
@@ -555,9 +571,9 @@ while True:
                             t.add_row(["", "", format_string(sum_debit), format_string(sum_credit)])
                     else:
                         if ori_sum_debit>ori_sum_credit:
-                            t.add_row(["", "Balance c/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
+                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_debit-ori_sum_credit)], divider=True)
                         else:
-                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
+                            t.add_row(["", "Balance c/d", format_string(ori_sum_credit-ori_sum_debit), ""], divider=True)
                     cls()
                     print(t)
                 elif options=="Last Quarter":
@@ -581,15 +597,14 @@ while True:
                                 ori_sum_debit+=trx[4]
                             else:
                                 ori_sum_credit+=trx[4]
-                        
                     mycursor.execute(f"SELECT trx_date, debit_account, credit_account, narration, amount, trx_id from journal where orgID={orgData[0][0]} and (debit_account='{accounts}' or credit_account='{accounts}') and (trx_date between '{start_of_month}' and '{end_of_month}') order by trx_date")
                     myresult = mycursor.fetchall()
                     if myresult!=[]:
                         sum_debit, sum_credit = 0, 0
-                        if ori_sum_debit>ori_sum_credit:
+                        if ori_sum_debit>ori_sum_credit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
                             sum_debit+=ori_sum_debit-ori_sum_credit
-                        else:
+                        elif ori_sum_credit>ori_sum_debit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
                             sum_credit+=ori_sum_credit-ori_sum_debit
                         for trx in myresult:
@@ -614,12 +629,13 @@ while True:
                             t.add_row(["", "", format_string(sum_debit), format_string(sum_credit)])
                     else:
                         if ori_sum_debit>ori_sum_credit:
-                            t.add_row(["", "Balance c/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
+                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_debit-ori_sum_credit)], divider=True)
                         else:
-                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
-                    cls()
+                            t.add_row(["", "Balance c/d", format_string(ori_sum_credit-ori_sum_debit), ""], divider=True)
+                    # cls()
                     print(t)
                 else:
+                    ori_sum_debit=ori_sum_credit=0
                     start_date = input("Enter the start date in YYYY-MM-DD format, include the dashes in between")
                     end_date = input("Enter the end date in YYYY-MM-DD format, include the dashes in between")
                     t.title = f"{accounts} Account for the Range {start_date}-{end_date}"
@@ -635,10 +651,10 @@ while True:
                     myresult = mycursor.fetchall()
                     if myresult!=[]:
                         sum_debit, sum_credit = 0, 0
-                        if ori_sum_debit>ori_sum_credit:
+                        if ori_sum_debit>ori_sum_credit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
                             sum_debit+=ori_sum_debit-ori_sum_credit
-                        else:
+                        elif ori_sum_credit>ori_sum_debit and ori_sum_credit!=0:
                             t.add_row(["", "Balance b/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
                             sum_credit+=ori_sum_credit-ori_sum_debit
                         for trx in myresult:
@@ -663,9 +679,9 @@ while True:
                             t.add_row(["", "", format_string(sum_debit), format_string(sum_credit)])
                     else:
                         if ori_sum_debit>ori_sum_credit:
-                            t.add_row(["", "Balance c/d", format_string(ori_sum_debit-ori_sum_credit), ""], divider=True)
+                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_debit-ori_sum_credit)], divider=True)
                         else:
-                            t.add_row(["", "Balance c/d", "", format_string(ori_sum_credit-ori_sum_debit)], divider=True)
+                            t.add_row(["", "Balance c/d", format_string(ori_sum_credit-ori_sum_debit), ""], divider=True)
                     cls()
                     print(t)
     elif option=="Journal":
@@ -698,6 +714,182 @@ while True:
             mydb.commit()
             cls()
             print("Journalised successfully!\n")
-
+    elif option=="Fixed Assets Management":
+        mycursor.execute(f"SELECT account_name from fixed_assets where orgID={orgData[0][0]}")
+        myresult=mycursor.fetchall()
+        if myresult==[]:
+            mycursor.execute(f"SELECT account_name from coa where orgID={orgData[0][0]} and category in ('A', 'L', 'C')")
+            myresult=mycursor.fetchall()
+            accounts = []
+            if myresult==[]:
+                print("You have not added any ledger accounts for financing the Asset. Add an account and return back here")
+            else:
+                for account in myresult:
+                    accounts.append(account[0])
+                ch = cutie.prompt_yes_or_no("You have not added any fixed assets for management. Add an asset?")
+                if ch==True:
+                    cls()
+                    account_name = input("Enter the name of the Asset")
+                    mycursor.execute(f"SELECT count(account_name) from fixed_assets where account_name='{account_name}'")
+                    myresult=mycursor.fetchall()
+                    num = myresult[0][0]
+                    if num==0:
+                        account_name+=f" ({str(1)})"
+                    else:
+                        num+=1
+                        new_num = str(num)
+                        account_name+=f" ({new_num})"
+                    lifespan = int(cutie.get_number("How much is the estimated life span of the asset", 1))
+                    ch_1 = cutie.prompt_yes_or_no("Is the asset subjected to higher repairs and maintenance when it nears it's lifespan?")
+                    ch_2 = cutie.prompt_yes_or_no("Is the asset exposed to higher risks of obsolescense?")
+                    if ch_1==True and ch_2==True:
+                        print("We determined that the Written Down Value Method is best for the Asset\n-> The Written Down Value Method (WDV) charges higher depreciation in an asset's early life, when it's work efficiency is at maximum.\n-> It is used by Income Tax Authorities\n-> Depreciation goes on reducing year to year\n.-> The amount of depreciation and the repairs amount to the P&L account will be uniform year-to-year.\n\n")
+                        ch = cutie.prompt_yes_or_no("Agree with WDV or use SLM?")
+                        if ch==True:
+                            method = "WDV"
+                        else:
+                            method = "SLM"
+                    else:
+                        print("We determined that the Straight Line Method is best for the Asset\n-> The Straight Line Method (SLM) charges equal amount of depreciation to an asset \n-> It is suitable for assets who does not have much repair charges and for those assets whose loss due to obsolescense is low\n\n")
+                        ch = cutie.prompt_yes_or_no("Agree with SLM or use WDV?")
+                        if ch==True:
+                            method = "SLM"
+                        else:
+                            method = "WDV"                    
+                    date_ = input("Enter the date of the transaction in YYYY-MM-DD format, including the dashes")
+                    print("How did you finance the Asset")
+                    credit_acc = accounts[cutie.select(accounts)]
+                    narration = input("Enter a narration for the transaction (OPTIONAL)")
+                    amount = float(input("Enter the amount of the transaction"))
+                    ch = int(input("Enter the estimated scrap value of the asset"))
+                    if method=="SLM":
+                        dep = (amount-ch)/lifespan
+                        per = (dep/amount)*100
+                    else:
+                        dep = 1-(ch/amount)**(1/lifespan)
+                        per = (dep/amount)*100
+                    mycursor.execute(f"INSERT INTO fixed_assets VALUES({orgData[0][0]}, '{account_name}', {lifespan}, '{method}', {amount}, {per}, '{date_}')")
+                    mycursor.execute(f"INSERT INTO coa VALUES({orgData[0][0]}, '{account_name}', 'A')")
+                    mycursor.execute(f"SELECT max(trx_id) from journal where orgID={orgData[0][0]}")
+                    trx_id = mycursor.fetchall()[0][0]
+                    if trx_id==None:
+                        trx_id=1
+                    else:
+                        trx_id+=1
+                    mycursor.execute(f"INSERT INTO journal VALUES({orgData[0][0]}, '{date_}', '{account_name}', '{credit_acc}', '{narration}', {amount}, {trx_id})")
+                    mydb.commit()
+                    print("Asset account created successfully")
+        else:
+            print(f"You have {len(myresult)} assets")
+            while True:
+                mycursor.execute(f"SELECT account_name from fixed_assets where orgID={orgData[0][0]}")
+                myresult=mycursor.fetchall()
+                print(f"Manage assets")
+                assets = []
+                for asset in myresult:
+                    assets.append(asset[0])
+                assets.append('Back')
+                asset = assets[cutie.select(assets)]
+                if asset!="Back":
+                    cls()
+                    mycursor.execute(f"SELECT account_name, ls, method, pp, dep, dp from fixed_assets where orgID={orgData[0][0]} and account_name='{asset}'")                
+                    asset_details=mycursor.fetchall()
+                    print("Name of the Asset:", asset_details[0][0])
+                    print("Expected Life Span of the Asset:", asset_details[0][1], "years")
+                    print("Method of charging Depreciation:", asset_details[0][2])
+                    print("Purchase price of the Asset:", asset_details[0][3])
+                    ori_sum_debit=ori_sum_credit=0
+                    todayDate = date.today()
+                    trx_date = ""
+                    mycursor.execute(f"SELECT trx_date, debit_account, credit_account, narration, amount, trx_id from journal where orgID={orgData[0][0]} and (debit_account='{asset}' or credit_account='{asset}') and (trx_date<'{todayDate}') order by trx_date")
+                    myresult = mycursor.fetchall()
+                    if myresult!=[]:
+                        for trx in myresult:
+                            if trx[1]==asset:
+                                ori_sum_debit+=trx[4]
+                            else:
+                                ori_sum_credit+=trx[4]
+                    mycursor.execute(f"SELECT trx_date, debit_account, credit_account, narration, amount, trx_id from journal where orgID={orgData[0][0]} and (debit_account='{asset}' or credit_account='{asset}') and (trx_date='{todayDate}') order by trx_date")
+                    myresult = mycursor.fetchall()
+                    if myresult!=[]:
+                        sum_debit, sum_credit = 0, 0
+                        if ori_sum_debit>ori_sum_credit and ori_sum_credit!=0:
+                            sum_debit+=ori_sum_debit-ori_sum_credit
+                        elif ori_sum_credit>ori_sum_debit and ori_sum_credit!=0:
+                            sum_credit+=ori_sum_credit-ori_sum_debit
+                        for trx in myresult:
+                            if trx[1]==asset:
+                                sum_debit+=trx[4]
+                                pass
+                            else:
+                                sum_credit+=trx[4]
+                                pass
+                        if sum_debit>sum_credit:
+                            balance = sum_debit-sum_credit
+                            
+                        elif sum_debit<sum_credit:
+                            balance = sum_credit-sum_debit
+                        else:
+                            balance = 0
+                    else:
+                        if ori_sum_debit>ori_sum_credit:
+                            balance = ori_sum_debit-ori_sum_credit
+                        else:
+                            balance = ori_sum_credit-ori_sum_debit
+                    print("Current book value of the Asset:", balance)
+                    today = datetime.now()
+                    if asset_details[0][2]=="SLM":
+                        start_of_month = (datetime.now().replace(year=datetime.now().year - 1, month=4, day=1)).date()
+                        end_of_month = (today.replace(day=31, month=3)).date()
+                        mycursor.execute(f"SELECT '{asset_details[0][-1]}' between '{start_of_month}' and '{end_of_month}'")
+                        myresult = mycursor.fetchall()
+                        if myresult[0][0]==1:
+                            dp = (asset_details[0][-1]).month
+                            today = (datetime.now()).month
+                            if dp==today:
+                                months = 1
+                            else:
+                                months = (today-dp)+1
+                            dep = int(asset_details[0][3]*(asset_details[0][4]/100)*months/12)
+                        else:
+                            dep = int(asset_details[0][3]*(asset_details[0][4]/100))
+                    else:
+                        start_of_month = (datetime.now().replace(year=datetime.now().year - 1, month=4, day=1)).date()
+                        end_of_month = (today.replace(day=31, month=3)).date()
+                        mycursor.execute(f"SELECT '{asset_details[0][-1]}' between '{start_of_month}' and '{end_of_month}'")
+                        myresult = mycursor.fetchall()
+                        if myresult[0][0]==1:
+                            dp = (asset_details[0][-1]).month
+                            today = (datetime.now()).month
+                            if dp==today:
+                                months = 1
+                            else:
+                                months = (today-dp)+1
+                            dep = int(asset_details[0][3]*(asset_details[0][4]/100)*months/12)
+                        else:
+                            dep = int(balance*(asset_details[0][4]/100))
+                    print("Amount of depreciation to be charged:", dep)
+                    today = datetime.now()
+                    if today.date() == 31 and today.month==3:
+                        try:
+                            mycursor.execute(f"INSERT INTO coa VALUES({orgData[0][0]}, 'Depreciation', 'E')")
+                        except:
+                            pass
+                        narration = f"Being depreciation for {asset_details[0][0]} for the accounting year {today.year-1}-{today.year}"
+                        amount = dep
+                        mycursor.execute(f"SELECT max(trx_id) from journal where orgID={orgData[0][0]}")
+                        trx_id = mycursor.fetchall()[0][0]
+                        if trx_id==None:
+                            trx_id=1
+                        else:
+                            trx_id+=1
+                        mycursor.execute(f"INSERT INTO journal VALUES({orgData[0][0]}, '{today.date()}', 'Depreciation', '{asset_details[0][0]}', '{narration}', {amount}, {trx_id})")
+                        mydb.commit()
+                    else:
+                        print("Finex will charge depreciation to asset on 31st March")
+                else:
+                    cls()
+                    break
     elif option=="Exit":
         exit()
+
